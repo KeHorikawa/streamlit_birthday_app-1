@@ -93,28 +93,24 @@ def generate_birthday_message(
 7. 毎回違う表現を使い、似た表現の連続を避ける
 """
 
+        # システムプロンプトとユーザープロンプトを結合
+        system_prompt = (
+            "あなたは優しく、人を励ますことが得意なメッセージ作成の専門家です。"
+        )
+        full_prompt = f"{system_prompt}\n\n{prompt}"
+
         # OpenAI Responses API 呼び出し
         response = client.responses.create(
-            model="gpt-4o",  # Responses API推奨モデル
-            messages=[
-                {
-                    "role": "system",
-                    "content": "あなたは優しく、人を励ますことが得意なメッセージ作成の専門家です。",
-                },
-                {"role": "user", "content": prompt},
-            ],
-            temperature=0.9,  # 毎回違うメッセージを生成するため高めに設定
-            max_output_tokens=500,
+            model="gpt-5-mini",  # Responses API推奨モデル
+            input=full_prompt,  # inputパラメータを使用
+            max_output_tokens=2000,  # reasoning用に余裕を持たせる
         )
 
         # Responses APIの応答を取得
         if hasattr(response, "output_text") and response.output_text:
-            message = response.output_text.strip()
-        elif hasattr(response, "choices") and response.choices:
-            message = response.choices[0].message.content.strip()
+            return response.output_text.strip()
         else:
-            message = str(response).strip()
-        return message
+            return f"⚠️ APIから正常なレスポンスが得られませんでした。status: {getattr(response, 'status', 'unknown')}"
 
     except Exception as e:
         return f"⚠️ メッセージの生成中にエラーが発生しました: {str(e)}"
